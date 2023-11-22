@@ -1,0 +1,72 @@
+#include "main.h"
+#include <unistd.h>
+#include <stdarg.h>
+
+/**
+ * print_char - Print a single character
+ * @c: Character to print
+ *
+ * Return: Number of characters printed
+ */
+int print_char(int c)
+{
+return (write(1, &c, 1));
+}
+/**
+ * print_string - Print a string
+ * @str: String to print
+ *
+ * Return: Number of characters printed
+ */
+int print_string(char *str)
+{
+int count = 0;
+if (!str)
+str = "(null)";
+while (*str)
+{
+count += write(1, str++, 1);
+}
+return (count);
+}
+/**
+ * _printf - Custom printf function
+ * @format: Format string
+ * Return: Number of characters printed
+ */
+int _printf(const char *format, ...)
+{
+va_list args;
+int count = 0;
+va_start(args, format);
+
+while (*format)
+{
+if (*format == '%')
+{
+format++;
+switch (*format)
+{
+case 'c':
+count += print_char(va_arg(args, int));
+break;
+case 's':
+count += print_string(va_arg(args, char *));
+break;
+case '%':
+count += print_char('%');
+break;
+default:
+count += print_char('%') + print_char(*format);
+break;
+}
+}
+else
+{
+count += print_char(*format);
+}
+format++;
+}
+va_end(args);
+return (count);
+}
