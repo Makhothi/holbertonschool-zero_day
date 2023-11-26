@@ -1,72 +1,119 @@
 #include "main.h"
-#include <unistd.h>
+#include <stdio.h>
 #include <stdarg.h>
-
+#include <unistd.h>
 /**
- * print_char - Print a single character
- * @c: Character to print
+ * _printf - Custom printf function handling %c, %s, and %%
+ * @format: Pointer to the format string
  *
- * Return: Number of characters printed
- */
-int print_char(int c)
-{
-return (write(1, &c, 1));
-}
-/**
- * print_string - Print a string
- * @str: String to print
- *
- * Return: Number of characters printed
- */
-int print_string(char *str)
-{
-int count = 0;
-if (!str)
-str = "(null)";
-while (*str)
-{
-count += write(1, str++, 1);
-}
-return (count);
-}
-/**
- * _printf - Custom printf function
- * @format: Format string
- * Return: Number of characters printed
+ * Return: Number of characters printed (excluding null byte)
  */
 int _printf(const char *format, ...)
 {
 va_list args;
 int count = 0;
-va_start(args, format);
 
+if (format == NULL)
+return (-1);
+
+va_start(args, format);
 while (*format)
 {
 if (*format == '%')
 {
 format++;
-switch (*format)
+if (*format == '\0')
 {
-case 'c':
-count += print_char(va_arg(args, int));
+write(1, "%", 1);
+count++;
 break;
-case 's':
-count += print_string(va_arg(args, char *));
-break;
-case '%':
-count += print_char('%');
-break;
-default:
-count += print_char('%') + print_char(*format);
-break;
+}
+else if (*format == 'c' || *format == 's' || *format == '%')
+{
+count += handle_specifier(*format, args);
+}
+else
+{
+write(1, "%", 1);
+write(1, format, 1);
+count += 2;
 }
 }
 else
 {
-count += print_char(*format);
+write(1, format, 1);
+count++;
 }
 format++;
 }
 va_end(args);
+return (count);
+}
+/**
+ * handle_specifier - Handles %c, %s, and %%
+ * @format: Format specifier
+ * @args: Arguments list
+ *
+ * Return: Number of characters handled
+ */
+int handle_specifier(char format, va_list args)
+{
+int count = 0;
+switch (format)
+{
+case 'c':
+count = handle_char(va_arg(args, int));
+break;
+case 's':
+count = handle_string(va_arg(args, char *));
+break;
+case '%':
+write(1, &format, 1);
+count = 1;
+break;
+default:
+write(1, "%", 1);
+write(1, &format, 1);
+break;
+}
+return (count);
+}
+
+/**
+ * handle_char - Handles %c specifier
+ * @c: Character to be printed
+ *
+ * Return: Number of characters handled
+ */
+int handle_char(int c)
+{
+write(1, &c, 1);
+return (1);
+}
+
+/**
+ * handle_string - Handles %s specifier
+ * @str: String to be printed
+ *
+ * Return: Number of characters handled
+ */
+int handle_string(const char *str)
+{
+int count = 0;
+
+if (str == NULL)
+{
+write(1, "(null)", 6);
+count = 6;
+}
+else
+{
+while (*str)
+{
+write(1, str, 1);
+str++;
+count++;
+}
+}
 return (count);
 }
